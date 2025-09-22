@@ -2,20 +2,17 @@
 Django settings for demo_project project.
 """
 from pathlib import Path
-import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# IMPORTANT: Replace this with a new, secure key for production.
-# You can generate one with: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
-SECRET_KEY = 'your-new-super-secret-key'
+# IMPORTANT: You must generate a new, secure key for production.
+# Run: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+SECRET_KEY = 'django-insecure-placeholder-key'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# Add your server's public IP and domain name here
 ALLOWED_HOSTS = ['51.20.185.233', '127.0.0.1', 'localhost']
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -78,12 +75,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# This tells Django where to collect all static files for production
+# Directories where Django looks for static files during development
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static',
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
+# The single directory where all static files will be collected for production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

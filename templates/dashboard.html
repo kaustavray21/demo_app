@@ -1,48 +1,12 @@
-{% extends 'base.html' %} {% load tz %} {% block content %}
-<style>
-  .card {
-    background-color: var(--card-bg-color);
-    border: 1px solid var(--card-border-color);
-    border-radius: 12px;
-    color: var(--text-color);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
-  }
-  body.light-mode .card:hover {
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
-  }
-  .card-header {
-    background-color: transparent;
-    border-bottom: 1px solid var(--card-border-color);
-  }
-  .date-picker-form input {
-    background-color: var(--form-control-bg-color);
-    border: 1px solid var(--form-control-border-color);
-    color: var(--text-color);
-    border-radius: 6px;
-    padding: 0.375rem 0.75rem;
-  }
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-  }
-  body.light-mode input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: none;
-  }
-  .list-group-item {
-    background-color: transparent;
-    border-color: var(--card-border-color);
-    color: var(--text-color);
-  }
-  .text-muted {
-    color: #ccc !important;
-  }
-  body.light-mode .text-muted {
-    color: #333 !important;
-  }
-</style>
+{% extends 'base.html' %} 
+{% load static %}
+{% load tz %} 
+
+{% block page_styles %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+{% endblock %}
+
+{% block content %}
 <div class="container-fluid mt-4">
   <h1 class="h2 mb-4">Dashboard</h1>
   <p class="mb-4">Welcome, <span class="fw-bold">{{ user.username }}</span>!</p>
@@ -64,7 +28,7 @@
     <div class="col-lg-4 mb-4">
       <div class="card h-100">
         <div class="card-body text-center">
-          <h5 class="card-title">Total Logins</h5>
+          <h5 class="card-title">{{ stats_title }}</h5>
           <p class="display-4 fw-bold">{{ total_logins }}</p>
         </div>
       </div>
@@ -76,7 +40,11 @@
         >
           <h5 class="card-title w-100">Login Distribution</h5>
           <div style="position: relative; width: 90%; max-width: 250px">
-            <canvas id="loginPieChart"></canvas>
+            <canvas
+              id="loginPieChart"
+              data-labels='{{ chart_labels|safe }}'
+              data-data='{{ chart_data|safe }}'
+            ></canvas>
           </div>
         </div>
       </div>
@@ -88,17 +56,26 @@
       class="card-header d-flex justify-content-between align-items-center flex-wrap"
     >
       <h5 class="card-title mb-0 me-3">Login History</h5>
-      <form id="datePickerForm" method="get" class="date-picker-form">
-        <label for="date-picker" class="form-label mb-0 me-2"
-          >Select Date:</label
+      <div class="d-flex align-items-center">
+        {% if is_daily_view %}
+        <a href="{% url 'dashboard' %}" class="btn-reset me-3">Show All Time</a>
+        {% endif %}
+        <form
+          id="datePickerForm"
+          method="get"
+          class="date-picker-form d-flex align-items-center mb-0"
         >
-        <input
-          type="date"
-          id="date-picker"
-          name="date"
-          value="{{ selected_date_str }}"
-        />
-      </form>
+          <label for="date-picker" class="form-label mb-0 me-2"
+            >Select Date:</label
+          >
+          <input
+            type="date"
+            id="date-picker"
+            name="date"
+            value="{{ selected_date_str }}"
+          />
+        </form>
+      </div>
     </div>
     <div class="card-body">
       {% with formatted_date=selected_date_formatted %}
@@ -107,84 +84,33 @@
       </p>
       {% endwith %}
       <ul class="list-group list-group-flush">
-        {% for login in login_history %}
-        <li
-          class="list-group-item d-flex justify-content-between align-items-center"
-        >
-          Logged in at {% timezone "Asia/Kolkata" %}
-          <span>{{ login.login_timestamp|date:"P" }}</span>
-          {% endtimezone %}
-        </li>
-        {% empty %}
-        <li class="list-group-item">No login history found for this day.</li>
-        {% endfor %}
-      </ul>
+  {% for login in login_history %}
+  <li class="list-group-item">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        Logged in at
+        <strong>{{ login.login_timestamp|timezone:"Asia/Kolkata"|date:"P" }}</strong>
+      </div>
+      <div class="col-md-6 text-md-end">
+        {% if login.logout_timestamp %}
+          Logged out at
+          <strong>{{ login.logout_timestamp|timezone:"Asia/Kolkata"|date:"P" }}</strong>
+        {% else %}
+          <span class="badge bg-success">Active Session</span>
+        {% endif %}
+      </div>
+    </div>
+  </li>
+  {% empty %}
+  <li class="list-group-item">No login history found for this day.</li>
+  {% endfor %}
+</ul>
     </div>
   </div>
 </div>
+{% endblock %} 
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById("loginPieChart").getContext("2d");
-
-    const chartLabels = {{ chart_labels|safe }};
-    const chartData = {{ chart_data|safe }};
-
-    new Chart(ctx, {
-      type: "doughnut",
-      data: {
-        labels: chartLabels,
-        datasets: [
-          {
-            label: "Logins",
-            data: chartData,
-            backgroundColor: [
-              "rgba(90, 50, 232, 0.8)",
-              "rgba(138, 111, 249, 0.8)",
-              "rgba(185, 168, 251, 0.8)",
-              "rgba(233, 236, 239, 0.8)",
-            ],
-            hoverOffset: 20,
-            borderWidth: 0,
-          },
-        ],
-      },
-      options: {
-        cutout: "60%",
-        plugins: {
-          legend: {
-            labels: {
-              color: document.body.classList.contains("light-mode")
-                ? "#000"
-                : "#fff",
-            },
-          },
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                const label = context.label || "";
-                const value = context.raw || 0;
-                const total = context.chart.getDatasetMeta(0).total;
-                const percentage =
-                  total > 0
-                    ? ((value / total) * 100).toFixed(1) + "%"
-                    : "0%";
-                return `${label}: ${value} (${percentage})`;
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const datePicker = document.getElementById("date-picker");
-    if (datePicker) {
-      datePicker.addEventListener("change", function () {
-        document.getElementById("datePickerForm").submit();
-      });
-    }
-  });
-</script>
-
+{% block page_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{% static 'js/dashboard-chart.js' %}"></script>
 {% endblock %}

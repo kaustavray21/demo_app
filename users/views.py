@@ -38,58 +38,51 @@ def login_view(request):
     return render(request, 'login.html', {'form': form})
 
 def logout_view(request):
+    last_login = LoginHistory.objects.filter(user=request.user, logout_timestamp__isnull=True).order_by('-login_timestamp').first()
+    if last_login:
+        last_login.logout_timestamp = timezone.now()
+        last_login.save()
     logout(request)
     return redirect('home')
 
 @login_required
 def dashboard_view(request):
     selected_date_str = request.GET.get('date')
-    if selected_date_str:
-        try:
-            selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            selected_date = timezone.localdate()
+    is_daily_view = bool(selected_date_str)
+    all_user_logins = LoginHistory.objects.filter(user=request.user).order_by('-login_timestamp')
+
+    if is_daily_view:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        login_history = all_user_logins.filter(login_timestamp__date=selected_date)
+        total_logins_today = login_history.count()
+        stats_title = "Logins on Date"
+        total_logins_stat = total_logins_today
+        selected_date_formatted = selected_date.strftime('%B %d, %Y')
     else:
-        selected_date = timezone.localdate()
+        login_history = all_user_logins[:20]
+        total_logins_today = all_user_logins.count()
+        stats_title = "Total Logins (All Time)"
+        total_logins_stat = total_logins_today
+        selected_date_formatted = "all time"
+        selected_date_str = ""
 
-    login_history_for_day = LoginHistory.objects.filter(
-        user=request.user,
-        login_timestamp__date=selected_date
-    ).order_by('-login_timestamp')
-
-    total_logins_for_day = login_history_for_day.count()
-
-    selected_date_formatted = selected_date.strftime('%B %d, %Y')
-
-    all_user_logins = LoginHistory.objects.filter(user=request.user)
-    total_logins = all_user_logins.count()
-
-    time_of_day_counts = {
-        "Morning": 0, "Afternoon": 0, "Evening": 0, "Night": 0,
-    }
+    time_of_day_counts = {"Morning": 0, "Afternoon": 0, "Evening": 0, "Night": 0}
     for login_record in all_user_logins:
-        local_time = timezone.localtime(login_record.login_timestamp)
-        hour = local_time.hour
-        if 5 <= hour < 12:
-            time_of_day_counts["Morning"] += 1
-        elif 12 <= hour < 17:
-            time_of_day_counts["Afternoon"] += 1
-        elif 17 <= hour < 21:
-            time_of_day_counts["Evening"] += 1
-        else:
-            time_of_day_counts["Night"] += 1
+        hour = timezone.localtime(login_record.login_timestamp).hour
+        if 5 <= hour < 12: time_of_day_counts["Morning"] += 1
+        elif 12 <= hour < 17: time_of_day_counts["Afternoon"] += 1
+        elif 17 <= hour < 21: time_of_day_counts["Evening"] += 1
+        else: time_of_day_counts["Night"] += 1
     
-    chart_labels = json.dumps(list(time_of_day_counts.keys()))
-    chart_data = json.dumps(list(time_of_day_counts.values()))
-
     context = {
-        'total_logins': total_logins,
-        'login_history': login_history_for_day,
-        'total_logins_today': total_logins_for_day,
-        'selected_date_str': selected_date.strftime('%Y-%m-%d'),
+        'total_logins': total_logins_stat,
+        'stats_title': stats_title,
+        'login_history': login_history,
+        'total_logins_today': total_logins_today,
+        'selected_date_str': selected_date_str,
         'selected_date_formatted': selected_date_formatted,
-        'chart_labels': chart_labels,
-        'chart_data': chart_data,
+        'is_daily_view': is_daily_view,
+        'chart_labels': json.dumps(list(time_of_day_counts.keys())),
+        'chart_data': json.dumps(list(time_of_day_counts.values())),
     }
     return render(request, 'dashboard.html', context)
-

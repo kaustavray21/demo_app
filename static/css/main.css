@@ -1,0 +1,78 @@
+:root {
+  --bg-color: rgba(0, 0, 0, 0.5);
+  --text-color: #fff;
+  --navbar-bg-color: rgba(0, 0, 0, 0.3);
+  --card-bg-color: rgba(0, 0, 0, 0.5);
+  --card-border-color: rgba(255, 255, 255, 0.2);
+  --form-control-bg-color: rgba(255, 255, 255, 0.1);
+  --form-control-border-color: rgba(255, 255, 255, 0.3);
+  --btn-primary-bg-color: rgba(255, 255, 255, 0.2);
+  --btn-primary-border-color: white;
+  --accordion-button-bg-color: rgba(255, 255, 255, 0.1);
+  --accordion-button-active-bg-color: rgba(255, 255, 255, 0.2);
+  --accordion-item-border-color: rgba(255, 255, 255, 0.3);
+}
+body.light-mode {
+  --bg-color: rgba(255, 255, 255, 0.2);
+  --text-color: #000;
+  --navbar-bg-color: rgba(255, 255, 255, 0.15);
+  --card-bg-color: rgba(255, 255, 255, 0.2);
+  --card-border-color: rgba(0, 0, 0, 0.2);
+  --form-control-bg-color: rgba(0, 0, 0, 0.1);
+  --form-control-border-color: rgba(0, 0, 0, 0.3);
+  --btn-primary-bg-color: rgba(0, 0, 0, 0.2);
+  --btn-primary-border-color: black;
+  --accordion-button-bg-color: rgba(0, 0, 0, 0.1);
+  --accordion-button-active-bg-color: rgba(0, 0, 0, 0.2);
+  --accordion-item-border-color: rgba(0, 0, 0, 0.3);
+}
+body {
+  font-family: "Poppins", sans-serif;
+  color: var(--text-color);
+}
+#bg-video {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: -100;
+  object-fit: cover;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-color);
+  z-index: -99;
+}
+.navbar {
+  background-color: var(--navbar-bg-color);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--card-border-color);
+}
+.navbar-brand {
+  color: var(--text-color) !important;
+}
+.nav-link {
+  color: var(--text-color) !important;
+  padding: 8px 15px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+.nav-link:hover {
+  background-color: var(--card-border-color);
+}
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+body.light-mode .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(0, 0, 0, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+.theme-switcher {
+  cursor: pointer;
+}
