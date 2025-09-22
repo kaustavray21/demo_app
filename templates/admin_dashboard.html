@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+  <style>
+    .glow-link {
+      color: white;
+      text-decoration: none;
+      transition: text-shadow 0.3s ease;
+    }
+    .glow-link:hover {
+      color: white;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <h1 class="h2 mb-4">Admin Dashboard</h1>
+  <p class="mb-4">Welcome, <span class="fw-bold">{{ user.username }}</span>!</p>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Users</h5>
+    </div>
+    <div class="card-body">
+      <ul class="list-group list-group-flush">
+        {% for data in users_data %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <a href="{% url 'user_login_history' data.user_info.id %}" class="glow-link h5 mb-0">
+            {{ data.user_info.username }}
+          </a>
+          <div style="position: relative; height: 60px; width: 60px;">
+            <canvas 
+              class="user-pie-chart"
+              id="userPieChart_{{ data.user_info.id }}"
+              data-labels='{{ data.chart_labels|safe }}'
+              data-data='{{ data.chart_data|safe }}'>
+            </canvas>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item">No users found.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const chartCanvases = document.querySelectorAll(".user-pie-chart");
+
+      chartCanvases.forEach(canvas => {
+        const ctx = canvas.getContext('2d');
+        const chartLabels = JSON.parse(canvas.dataset.labels);
+        const chartData = JSON.parse(canvas.dataset.data);
+
+        const hasData = chartData.some(item => item > 0);
+        
+        if (hasData) {
+            new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: chartLabels,
+              datasets: [{
+                data: chartData,
+                backgroundColor: [
+                  "rgba(90, 50, 232, 0.8)",
+                  "rgba(138, 111, 249, 0.8)",
+                  "rgba(185, 168, 251, 0.8)",
+                  "rgba(233, 236, 239, 0.8)",
+                ],
+                borderWidth: 0,
+              }]
+            },
+            options: {
+              cutout: '60%',
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  enabled: true
+                }
+              }
+            }
+          });
+        }
+      });
+    });
+  </script>
+{% endblock %}

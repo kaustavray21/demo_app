@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tz %}
+
+{% block page_styles %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary mb-3">Back to Admin Dashboard</a>
+  <h1 class="h2 mb-4">Login History for {{ user.username }}</h1>
+
+  <div class="card">
+    <div class="card-body">
+      <ul class="list-group list-group-flush">
+        {% for login in login_history %}
+        <li class="list-group-item">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    Logged in at
+                    <strong>{{ login.login_timestamp|timezone:"Asia/Kolkata"|date:"P" }}</strong>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    {% if login.logout_timestamp %}
+                    Logged out at
+                    <strong>{{ login.logout_timestamp|timezone:"Asia/Kolkata"|date:"P" }}</strong>
+                    {% else %}
+                    <span class="badge bg-success">Active Session</span>
+                    {% endif %}
+                </div>
+            </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item">No login history found for this user.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
