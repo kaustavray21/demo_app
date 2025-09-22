@@ -12,7 +12,7 @@ SECRET_KEY = 'django-insecure-placeholder-key'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['13.53.39.227 ', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['13.53.39.227', '127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
