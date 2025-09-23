@@ -8,6 +8,7 @@ from django.utils import timezone
 import json
 from datetime import datetime
 from django.contrib.auth.models import User
+from django.contrib import messages
 
 def home(request):
     return render(request, 'home.html')
@@ -97,8 +98,7 @@ def admin_dashboard_view(request):
         return redirect('dashboard')
     
     normal_users = User.objects.filter(is_staff=False)
-    
-    users_with_chart_data = []
+    users_data = []
     
     for user in normal_users:
         all_user_logins = LoginHistory.objects.filter(user=user)
@@ -111,13 +111,13 @@ def admin_dashboard_view(request):
             elif 17 <= hour < 21: time_of_day_counts["Evening"] += 1
             else: time_of_day_counts["Night"] += 1
         
-        users_with_chart_data.append({
+        users_data.append({
             'user_info': user,
             'chart_labels': json.dumps(list(time_of_day_counts.keys())),
             'chart_data': json.dumps(list(time_of_day_counts.values())),
         })
         
-    return render(request, 'admin_dashboard.html', {'users_data': users_with_chart_data})
+    return render(request, 'admin_dashboard.html', {'users_data': users_data})
 
 @login_required
 def user_login_history_view(request, user_id):
@@ -125,10 +125,43 @@ def user_login_history_view(request, user_id):
         return redirect('dashboard')
 
     user = get_object_or_404(User, id=user_id)
+    selected_date_str = request.GET.get('date')
     login_history = LoginHistory.objects.filter(user=user).order_by('-login_timestamp')
+    total_logins = login_history.count()
+
+    if selected_date_str:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        login_history = login_history.filter(login_timestamp__date=selected_date)
+
+    time_of_day_counts = {"Morning": 0, "Afternoon": 0, "Evening": 0, "Night": 0}
+    all_logins_for_chart = LoginHistory.objects.filter(user=user)
+    for login_record in all_logins_for_chart:
+        hour = timezone.localtime(login_record.login_timestamp).hour
+        if 5 <= hour < 12: time_of_day_counts["Morning"] += 1
+        elif 12 <= hour < 17: time_of_day_counts["Afternoon"] += 1
+        elif 17 <= hour < 21: time_of_day_counts["Evening"] += 1
+        else: time_of_day_counts["Night"] += 1
     
     context = {
         'user': user,
         'login_history': login_history,
+        'total_logins': total_logins,
+        'selected_date_str': selected_date_str,
+        'chart_labels': json.dumps(list(time_of_day_counts.keys())),
+        'chart_data': json.dumps(list(time_of_day_counts.values())),
     }
     return render(request, 'user_login_history.html', context)
+
+@login_required
+def delete_user_view(request, user_id):
+    if not request.user.is_staff:
+        return redirect('dashboard')
+    
+    user_to_delete = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        user_to_delete.delete()
+        messages.success(request, f'User {user_to_delete.username} has been deleted.')
+        return redirect('admin_dashboard')
+        
+    return render(request, 'delete_user_confirm.html', {'user_to_delete': user_to_delete})

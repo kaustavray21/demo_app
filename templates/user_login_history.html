@@ -9,9 +9,73 @@
 {% block content %}
 <div class="container-fluid mt-4">
   <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary mb-3">Back to Admin Dashboard</a>
-  <h1 class="h2 mb-4">Login History for {{ user.username }}</h1>
+  <h1 class="h2 mb-4">Details for {{ user.username }}</h1>
+
+  <div class="details-grid mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="card-title">User Information</h5>
+            <p class="mb-1">
+              <strong>Full Name:</strong> 
+              {% if user.first_name and user.last_name %}
+                {{ user.first_name }} {{ user.last_name }}
+              {% else %}
+                Not provided
+              {% endif %}
+            </p>
+            <p class="mb-0"><strong>Email:</strong> {{ user.email }}</p>
+          </div>
+          <a href="{% url 'delete_user' user.id %}" class="btn btn-danger-custom">Delete User</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card h-100">
+      <div class="card-body text-center d-flex flex-column justify-content-center">
+        <h5 class="card-title">Total Logins</h5>
+        <p class="display-4 fw-bold mb-0">{{ total_logins }}</p>
+      </div>
+    </div>
+
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+        <h5 class="card-title w-100">Login Distribution</h5>
+        <div style="position: relative; width: 90%; max-width: 150px">
+          <canvas 
+            id="userPieChart"
+            data-labels='{{ chart_labels|safe }}'
+            data-data='{{ chart_data|safe }}'>
+          </canvas>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+      <h5 class="card-title mb-0 me-3">Login History</h5>
+      <div class="d-flex align-items-center">
+        {% if selected_date_str %}
+        <a href="{% url 'user_login_history' user.id %}" class="btn-reset me-3">Show All Time</a>
+        {% endif %}
+        <form
+          id="datePickerForm"
+          method="get"
+          class="date-picker-form d-flex align-items-center mb-0"
+        >
+          <label for="date-picker" class="form-label mb-0 me-2">Select Date:</label>
+          <input
+            type="date"
+            id="date-picker"
+            name="date"
+            value="{{ selected_date_str }}"
+            class="form-control"
+          />
+        </form>
+      </div>
+    </div>
     <div class="card-body">
       <ul class="list-group list-group-flush">
         {% for login in login_history %}
@@ -32,10 +96,70 @@
             </div>
         </li>
         {% empty %}
-        <li class="list-group-item">No login history found for this user.</li>
+        <li class="list-group-item">No login history found for this period.</li>
         {% endfor %}
       </ul>
     </div>
   </div>
 </div>
 {% endblock %}
+
+{% block page_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const datePicker = document.getElementById("date-picker");
+      if (datePicker) {
+        datePicker.addEventListener("change", function () {
+          this.form.submit();
+        });
+      }
+
+      const ctx = document.getElementById('userPieChart');
+      if (ctx) {
+        const chartLabels = JSON.parse(ctx.dataset.labels);
+        const chartData = JSON.parse(ctx.dataset.data);
+        const hasData = chartData.some(item => item > 0);
+
+        if (hasData) {
+          new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: chartLabels,
+              datasets: [{
+                data: chartData,
+                backgroundColor: [
+                  '#55EE74',
+                  '#085E19',
+                  '#34A64B',
+                  '#B6EBC0',
+                ],
+                borderWidth: 0,
+              }]
+            },
+            options: {
+              cutout: '60%',
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                     color: document.body.classList.contains("light-mode") ? "#000" : "#fff",
+                  }
+                },
+                tooltip: {
+                  enabled: true
+                }
+              },
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        } else {
+            const container = ctx.parentElement;
+            container.innerHTML = '<p class="text-muted mb-0">No login data for chart.</p>';
+        }
+      }
+    });
+  </script>
+{% endblock %}
+

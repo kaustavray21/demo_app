@@ -13,10 +13,10 @@
   --accordion-item-border-color: rgba(255, 255, 255, 0.3);
 }
 body.light-mode {
-  --bg-color: rgba(255, 255, 255, 0.2);
+  --bg-color: rgba(255, 255, 255, 0.7);
   --text-color: #000;
-  --navbar-bg-color: rgba(255, 255, 255, 0.15);
-  --card-bg-color: rgba(255, 255, 255, 0.2);
+  --navbar-bg-color: rgba(255, 255, 255, 0.5);
+  --card-bg-color: rgba(255, 255, 255, 0.6);
   --card-border-color: rgba(0, 0, 0, 0.2);
   --form-control-bg-color: rgba(0, 0, 0, 0.1);
   --form-control-border-color: rgba(0, 0, 0, 0.3);

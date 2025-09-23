@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .confirm-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirm-card {
+    background: var(--card-bg-color);
+    border: 1px solid var(--card-border-color);
+    border-radius: 12px;
+    padding: 2.5rem;
+    max-width: 500px;
+    width: 100%;
+    color: var(--text-color);
+  }
+</style>
+<div class="container confirm-container">
+  <div class="confirm-card text-center">
+    <h3 class="mb-4">Confirm Deletion</h3>
+    <p>Are you sure you want to permanently delete the user <strong class="text-danger">{{ user_to_delete.username }}</strong>?</p>
+    <p class="text-muted">This action cannot be undone.</p>
+    
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+        <button type="submit" class="btn btn-danger px-4">Confirm Delete</button>
+        <a href="{% url 'user_login_history' user_to_delete.id %}" class="btn btn-secondary px-4">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
